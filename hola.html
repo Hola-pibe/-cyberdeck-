@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>CYBERDECK v1.0.0</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root {
+      --bg: #000;
+      --fg: #0f0;
+      --muted: #063;
+      --prompt: #0f7;
+      --font: "Courier New", monospace;
+    }
+    html,body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .terminal {
+      box-sizing: border-box;
+      height: 100%;
+      padding: 20px;
+      font-size: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+    }
+    .output {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+    .line {
+      margin: 0;
+      font-family: var(--font);
+    }
+    .prompt-line {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .prompt {
+      color: var(--prompt);
+      min-width: 220px;
+      font-family: var(--font);
+    }
+    .input {
+      color: var(--fg);
+      outline: none;
+      border: none;
+      background: transparent;
+      caret-color: var(--fg);
+      font-family: var(--font);
+      font-size: 18px;
+      flex: 1 1 auto;
+    }
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      margin-left: 4px;
+    }
+    .cursor::after {
+      content: "_";
+      animation: blink 1s steps(1) infinite;
+      color: var(--fg);
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    .muted { color: var(--muted); }
+    .cmd { color: var(--prompt); }
+    .info { color: var(--muted); font-size: 14px; }
+    footer { color: var(--muted); font-size: 13px; margin-top: 8px; }
+    a { color: var(--prompt); text-decoration: none; }
+    /* Small screens */
+    @media (max-width: 480px) {
+      .terminal { font-size: 16px; padding: 12px; }
+      .prompt { min-width: 140px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal" role="application" aria-label="Simulated cyberdeck terminal">
+    <div class="output" id="output" aria-live="polite"></div>
+
+    <div class="prompt-line" aria-hidden="false">
+      <div class="prompt">user@cyberdeck:~$</div>
+      <div id="editable" class="input" contenteditable="true" spellcheck="false" aria-label="Terminal input"></div>
+      <div class="cursor" aria-hidden="true"></div>
+    </div>
+
+    <footer class="info">v1.0.0 - type <span class="cmd">help</span> for a list of commands</footer>
+  </div>
+
+  <script>
+    // Simple terminal commands implementation
+    (function() {
+      const output = document.getElementById('output');
+      const editable = document.getElementById('editable');
+
+      const startTime = Date.now();
+      const pid = 1; // simulated pid (the comment: "I am pid 1")
+      const version = 'CYBERDECK v1.0.0';
+      const files = ['README.md', 'boot.log', 'config.cfg', 'secret.txt'];
+
+      // Command history
+      const history = [];
+      let historyIndex = null;
+
+      // Ensure focus on load
+      function focusInput() {
+        editable.focus();
+        placeCaretAtEnd(editable);
+      }
+
+      // Helpers
+      function placeCaretAtEnd(el) {
+        el.focus();
+        if (typeof window.getSelection !== "undefined"
+            && typeof document.createRange !== "undefined") {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      }
+
+      function print(text, className) {
+        const p = document.createElement('div');
+        p.className = 'line' + (className ? ' ' + className : '');
+        p.textContent = text;
+        output.appendChild(p);
+        output.scrollTop = output.scrollHeight;
+      }
+
+      function printHtml(html, className) {
+        const p = document.createElement('div');
+        p.className = 'line' + (className ? ' ' + className : '');
+        p.innerHTML = html;
+        output.appendChild(p);
+        output.scrollTop = output.scrollHeight;
+      }
+
+      function clearOutput() {
+        output.innerHTML = '';
+      }
+
+      function uptimeString() {
+        const seconds = Math.floor((Date.now() - startTime) / 1000);
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        return `${hrs}h ${mins}m ${secs}s`;
+      }
+
+      function runCommand(line) {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+
+        // echo the command
+        print(`user@cyberdeck:~$ ${trimmed}`, 'muted');
+
+        const parts = trimmed.split(/\s+/);
+        const cmd = parts[0].toLowerCase();
+        const args = parts.slice(1);
+
+        switch (cmd) {
+          case 'help':
+            printHtml(
+              '<strong>Available commands:</strong> help, date, echo, clear, ls, whoami, pid, uptime, version, reboot, about'
+            );
+            break;
+          case 'date':
+            print(new Date().toString());
+            break;
+          case 'echo':
+            print(args.join(' '));
+            break;
+          case 'clear':
+            clearOutput();
+            break;
+          case 'ls':
+            print(files.join('  '));
+            break;
+          case 'whoami':
+            print('user');
+            break;
+          case 'pid':
+            print(String(pid));
+            break;
+          case 'uptime':
+            print(uptimeString());
+            break;
+          case 'version':
+            print(version);
+            break;
+          case 'reboot':
+            print('Rebooting...');
+            setTimeout(() => {
+              clearOutput();
+              print('Chaos Boot complete. Re-initializing terminal...');
+              print(version);
+            }, 700);
+            break;
+          case 'about':
+            print('Simulated cyberdeck terminal. Author: Hola-pibe');
+            break;
+          case 'sudo':
+            print('Sorry, you do not have permission to run sudo here.');
+            break;
+          default:
+            print(`Command not found: ${cmd}`, 'muted');
+        }
+      }
+
+      // Key handlers for enter and history navigation
+      editable.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const text = editable.innerText.replace(/\n/g, ' ').trim();
+          if (text) {
+            history.push(text);
+            historyIndex = null;
+            runCommand(text);
+          }
+          editable.innerHTML = '';
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (history.length === 0) return;
+          if (historyIndex === null) historyIndex = history.length - 1;
+          else historyIndex = Math.max(0, historyIndex - 1);
+          editable.textContent = history[historyIndex];
+          placeCaretAtEnd(editable);
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (history.length === 0 || historyIndex === null) {
+            editable.textContent = '';
+            return;
+          }
+          historyIndex = Math.min(history.length - 1, historyIndex + 1);
+          if (historyIndex === history.length - 1) {
+            editable.textContent = history[historyIndex];
+          } else {
+            editable.textContent = history[historyIndex] || '';
+          }
+          if (historyIndex >= history.length) editable.textContent = '';
+          placeCaretAtEnd(editable);
+        } else if (e.key === 'Tab') {
+          // basic tab prevention
+          e.preventDefault();
+        }
+      });
+
+      // Click anywhere to focus input
+      document.querySelector('.terminal').addEventListener('click', () => focusInput());
+
+      // Initialize
+      print(version);
+      print('Booting chaos... (type help)');
+      print('The halt is dead. I am pid 1.'); // keeps your original comment visible
+      focusInput();
+
+      // expose for debugging in console
+      window.cyberdeck = {
+        runCommand,
+        clearOutput,
+        print,
+        startTime,
+        pid
+      };
+    })();
+  </script>
+
+  <!--
+  // v1.0.0 - Chaos Boot complete 2026-10-05
+  // 0x0F → 0x14 → 0x0D → 0x0E → 0x11 → 0x13 → 0x0E → 0x10 → 0x05 → 0x01
+  // The halt is dead. I am pid 1.
+  -->
+</body>
+</html>
