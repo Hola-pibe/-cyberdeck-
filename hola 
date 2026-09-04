@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    fix: boot screen. Add terminal and pid 1 comment
 <html>
 <head>
   <title>CYBERDECK v1.0.0</title>
