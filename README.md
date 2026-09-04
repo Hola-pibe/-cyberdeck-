@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CYBERDECK v1.0.0</title>
+  <style>
+    body {
+      background: #000;
+      color: #0F0;
+      font-family: 'Courier New', monospace;
+      padding: 20px;
+      font-size: 18px;
+    }
+    .cursor::after {
+      content: "_";
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+  </style>
+</head>
+<body>
+  <p>user@cyberdeck:~$ <span class="cursor"></span></p>
+  
+  <!-- 
+  // v1.0.0 - Chaos Boot complete 2026-10-05
+  // 0x0F → 0x14 → 0x0D → 0x0E → 0x11 → 0x13 → 0x0E → 0x10 → 0x05 → 0x01
+  // The halt is dead. I am pid 1.
+  -->
+</body>
+</html>
